@@ -1,0 +1,109 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  background-color: rgb(75, 75, 80);
+  color: #fff;
+  font-size: 18px;
+  font-family: Arial;
+  line-height: 4.5;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  background-color: rgb(75, 75, 80);
+  color: #fff;
+  font-size: 18px;
+  font-family: Arial;
+  line-height: 4.5;
+}
+
+.footer .options {
+  display: flex;
+}
+
+.footer .copyright {
+  margin-left: 20px;
+}
+
+.footer .options a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 20px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  margin-left: 8px;
+  margin-top: 34px;
+}
+
+.options {
+  display: flex;
+}
+
+.options a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 20px;
+}
+
+.siteName {
+  margin-right: 20px;
+  margin-left: 10px;
+  font-family: Arial;
+  line-height: 4.5;
+}
+
+.splashText {
+  margin-right: 20px;
+  margin-left: 10px;
+  font-family: Arial;
+  line-height: 4.5;
+}
+
+.logo-and-site-name {
+  display: flex;
+  align-items: center;
+}
+
+body {
+  background-color: rgb(40, 40, 40);
+}
+
+.box {
+  background-color: rgb(100, 100, 110);
+  border: 1px solid #333;
+  padding: 20px;
+  color: #fff;
+  font-size: 18px;
+  font-family: Arial;
+  line-height: 1;
+}
+
+.darkerBox {
+  background-color: rgb(75, 75, 80);
+  border: 1px solid #333;
+  padding: 20px;
+  color: #fff;
+  font-size: 18px;
+  font-family: Arial;
+  line-height: 1;
+}
+
+a:visited {
+  color: rgb(200, 200, 200);
+}
+
+a:link {
+  color: #fff;
+}
+
+a:hover {
+  color: #fff;
+}

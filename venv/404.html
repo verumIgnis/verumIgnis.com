@@ -25,7 +25,10 @@
     </div>
   </div>
   <div class="box">
-    <p>404 - Thats an error. If I screwed something up DM me on discord at verumIgnis#1564.</p>
+    <p>404 - Page not found</p>
+  </div>
+  <div class="box">
+    <p id="errorMessage">witty 404 message goes here</p>
   </div>
   <div class="footer">
     <div class="copyright">Licensed under CC BY-SA 4.0</div>
@@ -35,4 +38,21 @@
     </div>
   </div>
   <script src="https://verumignis.com/splash.js"></script>
+  <script>
+  var errorMessages = [
+    "Looks like you took a wrong turn somewhere. Don't worry, we've all been there. Try going back or using the navigation to find your way.",
+    "Oops! It looks like the page you were looking for has vanished into the ether. Don't worry, just keep searching and you'll find what you're looking for.",
+    "We're sorry, but the page you were trying to access seems to have gone missing. Maybe it's time to try a new route?",
+    "404 Error: Page not found. But hey, at least you found this amusing error message!",
+    "Looks like you stumbled upon a broken link. Don't worry, just keep clicking around and you'll eventually find your way back home.",
+    "The page you're looking for seems to have taken a wrong turn and gotten lost. But don't worry, we'll help you get back on track.",
+    "Sorry, the page you were trying to reach has seemingly gone off the grid. But don't worry, we've got a team of highly trained squirrels working on the issue as we speak.",
+    "It seems like the page you're looking for has gone on a permanent vacation. But don't worry, we'll help you find a new destination.",
+    "Uh oh, it looks like the page you were trying to access has fallen off the face of the internet. Don't worry, we'll help you find a new page to visit.",
+    "The page you were trying to reach has apparently gone undercover. But don't worry, we'll help you find a new secret hideout."
+  ];
+  var errorMessage = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+  document.getElementById("errorMessage").innerHTML = errorMessage;
+</script>
+
 </body>

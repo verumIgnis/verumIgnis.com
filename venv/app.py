@@ -61,6 +61,8 @@ def bitmapgen(input_string):
                     colour = (255, 128, 0)
                 elif pixel == "9":
                     colour = (128, 128, 128)
+                else:
+                    colour = (0, 0, 0)
                 draw_pixel(draw, x, y, colour)
 
     response = Response(mimetype='image/png')
@@ -70,17 +72,11 @@ def bitmapgen(input_string):
 
 @app.route('/<path:filename>')
 def serve(filename):
-    if "download" in filename:
-        try:
-            return send_file(filename, as_attachment=True)
-        except FileNotFoundError:
-            abort(404)
-    else:
-        try:
-            mimetype = mimetypes.guess_type(filename)[0]
-            return send_file(filename, mimetype=mimetype)
-        except FileNotFoundError:
-            abort(404)
+    try:
+        mimetype = mimetypes.guess_type(filename)[0]
+        return send_file(filename, mimetype=mimetype)
+    except FileNotFoundError:
+        abort(404)
 
 
 @app.errorhandler(404)
@@ -90,3 +86,4 @@ def not_found(error):
 
 if __name__ == '__main__':
     app.run()
+

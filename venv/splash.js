@@ -34,13 +34,10 @@ const splashTextList = [
   "Block doubleclick.net",
   "THISisTHEbestCASE"
 ];
-
 const splashTextElement = document.querySelector('.splashText');
-
 function setRandomSplashText() {
   const randomIndex = Math.floor(Math.random() * splashTextList.length);
   splashTextElement.textContent = splashTextList[randomIndex];
 }
-
 setRandomSplashText();
 setInterval(setRandomSplashText, 50000);

@@ -24,6 +24,13 @@ def index():
 
 @app.route('/cool-video')
 def cool_video():
+    f = open("rickrolls.txt", "r")
+    rickrollCount = int(f.read())
+    f.close()
+    newCount = rickrollCount + 1
+    f = open("rickrolls.txt", "w")
+    f.write(str(newCount))
+    f.close()
     return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
 
 
@@ -64,7 +71,6 @@ def bitmapgen(input_string):
                 else:
                     colour = (0, 0, 0)
                 draw_pixel(draw, x, y, colour)
-
     response = Response(mimetype='image/png')
     image.save(response.stream, format='PNG')
     return response
@@ -72,11 +78,22 @@ def bitmapgen(input_string):
 
 @app.route('/<path:filename>')
 def serve(filename):
-    try:
-        mimetype = mimetypes.guess_type(filename)[0]
-        return send_file(filename, mimetype=mimetype)
-    except FileNotFoundError:
-        abort(404)
+    if "duck.webm" in filename or "cool-video" in filename:
+        f = open("rickrolls.txt", "r")
+        rickrollCount = int(f.read())
+        f.close()
+        newCount = rickrollCount + 1
+        f = open("rickrolls.txt", "w")
+        f.write(str(newCount))
+        f.close()
+    if "cool-video" in filename:
+        return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    else:
+        try:
+            mimetype = mimetypes.guess_type(filename)[0]
+            return send_file(filename, mimetype=mimetype)
+        except FileNotFoundError:
+            abort(404)
 
 
 @app.errorhandler(404)

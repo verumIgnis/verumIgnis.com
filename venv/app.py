@@ -82,11 +82,13 @@ def serve(filename):
         except FileNotFoundError:
             abort(404)
 
-
 @app.errorhandler(404)
 def not_found(error):
     return send_file("404.html", mimetype="text/html"), 404
 
+@app.errorhandler(500)
+def internal_server_error(error):
+    return send_file("500.html", mimetype="text/html"), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

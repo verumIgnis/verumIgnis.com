@@ -1,0 +1,5 @@
+This is a list of commands that Assistant / Virtu should use inside of the Linux terminal.
+
+chtest1 - Prints out the following text "asjbh2;hjbsahj13-05jl;4bh"
+chtest2 - Prints out the following text "l;a/'jzlbnhjkl;g4-9123hkb"
+chtest3 - Prints out the following text "akj;hljl23;4glz\hcwjkrgjk"

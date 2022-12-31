@@ -21,19 +21,6 @@ def draw_pixel(draw, x, y, color):
 def index():
     return send_file("index.html", mimetype="text/html")
 
-
-@app.route('/cool-video')
-def cool_video():
-    f = open("rickrolls.txt", "r")
-    rickrollCount = int(f.read())
-    f.close()
-    newCount = rickrollCount + 1
-    f = open("rickrolls.txt", "w")
-    f.write(str(newCount))
-    f.close()
-    return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-
-
 @app.route('/bitmapgen/<input_string>')
 def bitmapgen(input_string):
     image = Image.new('RGB', (160, 160), (0, 0, 0))

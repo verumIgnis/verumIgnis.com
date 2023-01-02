@@ -1,6 +1,12 @@
 import mimetypes
-from flask import Flask, send_file, abort, Response, redirect
-from PIL import Image, ImageDraw
+from flask import Flask, send_file, abort, Response, redirect, make_response
+from PIL import Image, ImageDraw, ImageFont
+import random
+import json
+from io import BytesIO
+import time
+from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -21,13 +27,298 @@ def draw_pixel(draw, x, y, color):
 def index():
     return send_file("index.html", mimetype="text/html")
 
+
+@app.route('/bash/start')
+def start_bash():
+    # Load game data from bashData.json
+    with open('bashData.json', 'r') as f:
+        games = json.load(f)
+
+    # Delete any games that have existed for more than 10 minutes
+    current_time = time.time()
+    codes_to_delete = []
+    for code, game in games["games"].items():
+        if current_time - game["timestamp"] > 10 * 60:
+            codes_to_delete.append(code)
+    for code in codes_to_delete:
+        del games["games"][code]
+
+    # Generate random 5-digit code
+    code = ''.join(str(random.randint(0, 9)) for _ in range(5))
+    while code in games:  # Make sure code is not already in use
+        code = ''.join(str(random.randint(0, 9)) for _ in range(5))
+
+    # Create new game data in the format you've described
+    game_data = {
+        "player1": {
+            "ships": [],
+            "hits": []
+        },
+        "player2": {
+            "ships": [],
+            "hits": []
+        },
+        "turn": "1"
+    }
+    game_data["timestamp"] = time.time()  # Add timestamp to game data
+
+    # Generate ship positions for player1 and player2
+    for player in ["player1", "player2"]:
+        ships = []
+        # Generate ship positions for each ship size
+        for size in [5, 4, 3, 3, 2]:
+            # Generate random ship position (random orientation and random starting position)
+            orientation = random.choice(["horizontal", "vertical"])
+            if orientation == "horizontal":
+                x = random.randint(0, 9 - size)
+                y = random.randint(0, 9)
+                coordinates = [f"{chr(ord('A') + x + i)}{y}" for i in range(size)]
+            else:
+                x = random.randint(0, 9)
+                y = random.randint(0, 9 - size)
+                coordinates = [f"{chr(ord('A') + x)}{y + i}" for i in range(size)]
+
+            # Check if generated ship position overlaps with any existing ship positions
+            overlaps = False
+            for ship in ships:
+                if any(coord in ship["coordinates"] for coord in coordinates):
+                    overlaps = True
+                    break
+            if overlaps:
+                continue
+
+            ships.append({
+                "size": size,
+                "coordinates": coordinates
+            })
+            game_data[player]["ships"] = ships
+
+    games["games"][code] = game_data
+    with open('bashData.json', 'w') as f:
+        json.dump(games, f)
+
+    # Load start.png and draw code on top of it
+    img = Image.open('start.png')
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype('arial.ttf', 36)
+    draw.text((200, 452), f"https://verumignis.com/bash/{code}2/st", font=font, fill=(255, 255, 255))
+
+    # Save modified image to memory
+    with BytesIO() as buffer:
+        img.save(buffer, 'PNG')
+        buffer.seek(0)
+        img_data = buffer.read()
+
+    # Return image in response
+    response = make_response(img_data)
+    response.headers['Content-Type'] = 'image/png'
+    return response
+
+@app.route('/bash/<game_code>/st')
+def bash_st(game_code):
+    # Load game data from bashData.json
+    with open('bashData.json', 'r') as f:
+        games = json.load(f)
+
+    # Delete any games that have existed for more than 10 minutes
+    current_time = time.time()
+    codes_to_delete = []
+    for code, game in games["games"].items():
+        if current_time - game["timestamp"] > 10 * 60:
+            codes_to_delete.append(code)
+        else:
+            # set the timestamp to the current time
+            game["timestamp"] = current_time
+    for code in codes_to_delete:
+        del games["games"][code]
+
+    with open('bashData.json', 'w') as f:
+        json.dump(games, f)
+
+    # Check if game code is valid
+    if game_code[:-1] not in games["games"]:
+        # Return error2.png
+        with open('error2.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+
+    # Check last character of game code
+    if game_code[-1] == '1':
+        # Return continue.png
+        with open('continue.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+    elif game_code[-1] == '2':
+        # Load handshake.png and draw game code and link on top of it
+        img = Image.open('handshake.png')
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype('arial.ttf', 36)
+        draw.text((445, 237), f"{game_code[:-1]}2", font=font, fill=(255, 255, 255))
+        draw.text((200, 452), f"https://verumignis.com/bash/{game_code[:-1]}1/st", font=font, fill=(255, 255, 255))
+
+        # Save modified image to memory
+        with BytesIO() as buffer:
+            img.save(buffer, 'PNG')
+            buffer.seek(0)
+            img_data = buffer.read()
+
+        # Return image in response
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+    else:
+        # Return error1.png
+        with open('error2.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+
+@app.route('/bash/<game_code>/rl')
+def bash_rules(game_code):
+    # Load game data from bashData.json
+    with open('bashData.json', 'r') as f:
+        games = json.load(f)
+
+    # Delete any games that have existed for more than 10 minutes
+    current_time = time.time()
+    codes_to_delete = []
+    for code, game in games["games"].items():
+        if current_time - game["timestamp"] > 10 * 60:
+            codes_to_delete.append(code)
+        else:
+            # set the timestamp to the current time
+            game["timestamp"] = current_time
+    for code in codes_to_delete:
+        del games["games"][code]
+
+    with open('bashData.json', 'w') as f:
+        json.dump(games, f)
+
+    # Check if game code is valid
+    if game_code[-1] == "1" or game_code[-1] == "2":
+        if game_code[:-1] in games["games"]:
+            with open('rules.png', 'rb') as f:
+                img_data = f.read()
+            response = make_response(img_data)
+            response.headers['Content-Type'] = 'image/png'
+            return response
+        else:
+            with open('error2.png', 'rb') as f:
+                img_data = f.read()
+            response = make_response(img_data)
+            response.headers['Content-Type'] = 'image/png'
+            return response
+    else:
+        with open('error2.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+
+@app.route('/bash/<game_code>/<command>')
+def bash_game(game_code, command):
+    # Load game data from bashData.json
+    with open('bashData.json', 'r') as f:
+        games = json.load(f)
+
+    turn = games["games"][game_code[:-1]]["turn"]
+    hits = games["games"][game_code[:-1]][f"player{game_code[-1]}"]["hits"]
+
+    if turn == game_code[-1]:
+        if True:#not command == "rd":
+            if turn == "1":
+                turn = "2"
+            else:
+                turn == "1"
+        games["games"][game_code[:-1]]["turn"] = turn
+        current_time = time.time()
+        codes_to_delete = []
+        for code, game in games["games"].items():
+            if current_time - game["timestamp"] > 10 * 60:
+                codes_to_delete.append(code)
+            else:
+                game["timestamp"] = current_time
+        for code in codes_to_delete:
+            del games["games"][code]
+
+        # Check if game code is valid and get the appropriate player's ships
+        player_ships = []
+        if game_code[-1] == '1':
+            if game_code[:-1] in games["games"]:
+                player_ships = games["games"][game_code[:-1]]["player1"]["ships"]
+            else:
+                with open('error2.png', 'rb') as f:
+                    img_data = f.read()
+                response = make_response(img_data)
+                response.headers['Content-Type'] = 'image/png'
+                return response
+        elif game_code[-1] == '2':
+            if game_code[:-1] in games["games"]:
+                player_ships = games["games"][game_code[:-1]]["player2"]["ships"]
+            else:
+                with open('error2.png', 'rb') as f:
+                    img_data = f.read()
+                response = make_response(img_data)
+                response.headers['Content-Type'] = 'image/png'
+                return response
+        else:
+            with open('error2.png', 'rb') as f:
+                img_data = f.read()
+            response = make_response(img_data)
+            response.headers['Content-Type'] = 'image/png'
+            return response
+
+        with open('bashData.json', 'w') as f:
+            json.dump(games, f)
+
+        background_img = Image.open('background.png')
+        hit_img = Image.open('hit.png')
+
+        # Create a drawing context
+        draw = ImageDraw.Draw(background_img)
+        font = ImageFont.truetype('arial.ttf', 36)
+        draw.text((10, 520), f"Type s/{command}/<new position> and press enter.", font=font, fill=(255, 255, 255))
+
+        # Iterate through each ship and draw squares over the appropriate coordinates
+        for ship in player_ships:
+            for coord in ship["coordinates"]:
+                x = (ord(coord[0]) - 65) * 44 + 37
+                y = (int(coord[1]) - 1) * 44 + 81
+                draw.rectangle([(x, y), (x + 42, y + 42)], fill='white', outline='black')
+
+        for hit in hits:
+            x = (ord(hit[0]) - 65) * 44 + 37
+            y = (int(hit[1]) - 1) * 44 + 81
+            background_img.paste(hit_img, (x, y), hit_img)
+
+        img_bytes = BytesIO()
+        background_img.save(img_bytes, 'png')
+        img_bytes.seek(0)
+        img_data = img_bytes.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+
+    else:
+        print("not your turn")
+        with open('error2.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+
 @app.route('/bitmapgen/<input_string>')
 def bitmapgen(input_string):
     image = Image.new('RGB', (160, 160), (0, 0, 0))
     draw = ImageDraw.Draw(image)
 
     for y, row in enumerate(input_string.split('-')):
-        if len(row) > 16:
+        if "¦" in input_string:
             for x, pixel in enumerate(row.split('¦')):
                 bits = list(pixel)
                 pixelSplit = (bits[0], bits[1], bits[2])
@@ -65,7 +356,9 @@ def bitmapgen(input_string):
 
 @app.route('/<path:filename>')
 def serve(filename):
-    if "duck.webm" in filename or "cool-video" in filename:
+    if ".." in filename or "bashData" in filename:
+        return "nice try :)"
+    elif "duck.webm" in filename or "cool-video" in filename:
         f = open("rickrolls.txt", "r")
         rickrollCount = int(f.read())
         f.close()
@@ -73,7 +366,7 @@ def serve(filename):
         f = open("rickrolls.txt", "w")
         f.write(str(newCount))
         f.close()
-    if "cool-video" in filename:
+    elif "cool-video" in filename:
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
     else:
         try:

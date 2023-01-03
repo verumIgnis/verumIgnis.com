@@ -1,5 +1,5 @@
 import mimetypes
-from flask import Flask, send_file, abort, Response, redirect, make_response
+from flask import Flask, send_file, abort, Response, redirect, make_response, request
 from PIL import Image, ImageDraw, ImageFont
 import random
 import json
@@ -52,11 +52,13 @@ def start_bash():
     game_data = {
         "player1": {
             "ships": [],
-            "hits": []
+            "hits": [],
+            "remaining": "5"
         },
         "player2": {
             "ships": [],
-            "hits": []
+            "hits": [],
+            "remaining": "5"
         },
         "turn": "1"
     }
@@ -229,80 +231,82 @@ def bash_game(game_code, command):
     turn = games["games"][game_code[:-1]]["turn"]
     hits = games["games"][game_code[:-1]][f"player{game_code[-1]}"]["hits"]
 
-    if turn == game_code[-1]:
-        if True:#not command == "rd":
-            if turn == "1":
-                turn = "2"
-            else:
-                turn == "1"
-        games["games"][game_code[:-1]]["turn"] = turn
-        current_time = time.time()
-        codes_to_delete = []
-        for code, game in games["games"].items():
-            if current_time - game["timestamp"] > 10 * 60:
-                codes_to_delete.append(code)
-            else:
-                game["timestamp"] = current_time
-        for code in codes_to_delete:
-            del games["games"][code]
+    if turn == game_code[-1] or command == "rd":
+        if isinstance(command, str) and len(command) == 2 and command[0].isalpha() and command[1].isdigit() and command not in hits or command == "rd":
+            if not command == "rd":
+                if turn == "1":
+                    turn = "2"
+                else:
+                    turn == "1"
+                games["games"][game_code[:-1]][f"player{game_code[-1]}"]["hits"].append(command)
+            games["games"][game_code[:-1]]["turn"] = turn
 
-        # Check if game code is valid and get the appropriate player's ships
-        player_ships = []
-        if game_code[-1] == '1':
-            if game_code[:-1] in games["games"]:
-                player_ships = games["games"][game_code[:-1]]["player1"]["ships"]
+            current_time = time.time()
+            codes_to_delete = []
+            for code, game in games["games"].items():
+                if current_time - game["timestamp"] > 10 * 60:
+                    codes_to_delete.append(code)
+                else:
+                    game["timestamp"] = current_time
+            for code in codes_to_delete:
+                del games["games"][code]
+
+            player_ships = []
+            if game_code[-1] == '1':
+                if game_code[:-1] in games["games"]:
+                    player_ships = games["games"][game_code[:-1]]["player1"]["ships"]
+                else:
+                    with open('error2.png', 'rb') as f:
+                        img_data = f.read()
+                    response = make_response(img_data)
+                    response.headers['Content-Type'] = 'image/png'
+                    return response
+            elif game_code[-1] == '2':
+                if game_code[:-1] in games["games"]:
+                    player_ships = games["games"][game_code[:-1]]["player2"]["ships"]
+                else:
+                    with open('error2.png', 'rb') as f:
+                        img_data = f.read()
+                    response = make_response(img_data)
+                    response.headers['Content-Type'] = 'image/png'
+                    return response
             else:
                 with open('error2.png', 'rb') as f:
                     img_data = f.read()
                 response = make_response(img_data)
                 response.headers['Content-Type'] = 'image/png'
                 return response
-        elif game_code[-1] == '2':
-            if game_code[:-1] in games["games"]:
-                player_ships = games["games"][game_code[:-1]]["player2"]["ships"]
-            else:
-                with open('error2.png', 'rb') as f:
-                    img_data = f.read()
-                response = make_response(img_data)
-                response.headers['Content-Type'] = 'image/png'
-                return response
-        else:
-            with open('error2.png', 'rb') as f:
-                img_data = f.read()
+
+            with open('bashData.json', 'w') as f:
+                json.dump(games, f)
+
+            background_img = Image.open('background.png')
+            hit_img = Image.open('hit.png')
+
+            # Create a drawing context
+            draw = ImageDraw.Draw(background_img)
+            font = ImageFont.truetype('arial.ttf', 36)
+            draw.text((10, 520), f"Type s/{command}/<new position> and press enter.", font=font, fill=(255, 255, 255))
+
+            # Iterate through each ship and draw squares over the appropriate coordinates
+            for ship in player_ships:
+                for coord in ship["coordinates"]:
+                    x = (ord(coord[0]) - 65) * 44 + 37
+                    y = (int(coord[1]) - 1) * 44 + 81
+                    draw.rectangle([(x, y), (x + 42, y + 42)], fill='white', outline='black')
+
+            for hit in hits:
+                x = (ord(hit[0]) - 65) * 44 + 37
+                y = (int(hit[1]) - 1) * 44 + 81
+                background_img.paste(hit_img, (x, y), hit_img)
+
+            img_bytes = BytesIO()
+            background_img.save(img_bytes, 'png')
+            img_bytes.seek(0)
+            img_data = img_bytes.read()
             response = make_response(img_data)
             response.headers['Content-Type'] = 'image/png'
             return response
-
-        with open('bashData.json', 'w') as f:
-            json.dump(games, f)
-
-        background_img = Image.open('background.png')
-        hit_img = Image.open('hit.png')
-
-        # Create a drawing context
-        draw = ImageDraw.Draw(background_img)
-        font = ImageFont.truetype('arial.ttf', 36)
-        draw.text((10, 520), f"Type s/{command}/<new position> and press enter.", font=font, fill=(255, 255, 255))
-
-        # Iterate through each ship and draw squares over the appropriate coordinates
-        for ship in player_ships:
-            for coord in ship["coordinates"]:
-                x = (ord(coord[0]) - 65) * 44 + 37
-                y = (int(coord[1]) - 1) * 44 + 81
-                draw.rectangle([(x, y), (x + 42, y + 42)], fill='white', outline='black')
-
-        for hit in hits:
-            x = (ord(hit[0]) - 65) * 44 + 37
-            y = (int(hit[1]) - 1) * 44 + 81
-            background_img.paste(hit_img, (x, y), hit_img)
-
-        img_bytes = BytesIO()
-        background_img.save(img_bytes, 'png')
-        img_bytes.seek(0)
-        img_data = img_bytes.read()
-        response = make_response(img_data)
-        response.headers['Content-Type'] = 'image/png'
-        return response
 
     else:
         print("not your turn")
@@ -366,14 +370,13 @@ def serve(filename):
         f = open("rickrolls.txt", "w")
         f.write(str(newCount))
         f.close()
-    elif "cool-video" in filename:
+    if "cool-video" in filename:
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-    else:
-        try:
-            mimetype = mimetypes.guess_type(filename)[0]
-            return send_file(filename, mimetype=mimetype)
-        except FileNotFoundError:
-            abort(404)
+    try:
+        mimetype = mimetypes.guess_type(filename)[0]
+        return send_file(filename, mimetype=mimetype)
+    except FileNotFoundError:
+        abort(404)
 
 @app.errorhandler(404)
 def not_found(error):
@@ -381,6 +384,12 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_server_error(error):
+    if "bash" in request.path:
+        with open('error2.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
     return send_file("500.html", mimetype="text/html"), 500
 
 if __name__ == '__main__':

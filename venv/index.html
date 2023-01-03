@@ -31,6 +31,9 @@
   <div class="box">
     <p>Number of rickrolls served by this website: <span id="rickrolls-count">getting count...</span><br></p>
   </div>
+  <div class="box">
+    <p>Play s/battleship - send this link to someone in discord: https://verumignis.com/bash/start.png?nc=<span id="cacheRND">getting rand...</span><br></p>
+  </div>
   <div class="footer">
     <div class="copyright">Licensed under CC BY-SA 4.0</div>
     <div class="cont"><a href="tos.html">Terms of service</a> - <a href="privacy.html">Privacy policy</a></div>
@@ -45,6 +48,7 @@
         document.getElementById('rickrolls-count').innerHTML = text;
       });
   </script>
+  <script>document.getElementById("cacheRND").innerHTML = Math.floor(Math.random() * 10000000000);</script>
   <script src="splash.js"></script>
 </body>
 </html>

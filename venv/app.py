@@ -30,7 +30,7 @@ def index():
     return send_file("index.html", mimetype="text/html")
 
 
-@app.route('/bash/start')
+@app.route('/bash/start.png')
 def start_bash():
     # Load game data from bashData.json
     with open('bashData.json', 'r') as f:

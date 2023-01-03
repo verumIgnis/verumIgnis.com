@@ -19,6 +19,8 @@ base64_to_rgb = {'A': 0, 'B': 4, 'C': 8, 'D': 12, 'E': 16, 'F': 20, 'G': 24, 'H'
                  '_': 248, ';': 252, '¬': 255}
 
 
+
+
 def draw_pixel(draw, x, y, color):
     draw.rectangle((x * 10, y * 10, x * 10 + 10, y * 10 + 10), fill=color)
 
@@ -69,25 +71,26 @@ def start_bash():
         ships = []
         # Generate ship positions for each ship size
         for size in [5, 4, 3, 3, 2]:
-            # Generate random ship position (random orientation and random starting position)
-            orientation = random.choice(["horizontal", "vertical"])
-            if orientation == "horizontal":
-                x = random.randint(0, 9 - size)
-                y = random.randint(0, 9)
-                coordinates = [f"{chr(ord('A') + x + i)}{y}" for i in range(size)]
-            else:
-                x = random.randint(0, 9)
-                y = random.randint(0, 9 - size)
-                coordinates = [f"{chr(ord('A') + x)}{y + i}" for i in range(size)]
+            while True:  # Keep trying until ship position is generated successfully
+                # Generate random ship position (random orientation and random starting position)
+                orientation = random.choice(["horizontal", "vertical"])
+                if orientation == "horizontal":
+                    x = random.randint(0, 9 - size)
+                    y = random.randint(0, 9)
+                    coordinates = [f"{chr(ord('A') + x + i)}{y}" for i in range(size)]
+                else:
+                    x = random.randint(0, 9)
+                    y = random.randint(0, 9 - size)
+                    coordinates = [f"{chr(ord('A') + x)}{y + i}" for i in range(size)]
 
-            # Check if generated ship position overlaps with any existing ship positions
-            overlaps = False
-            for ship in ships:
-                if any(coord in ship["coordinates"] for coord in coordinates):
-                    overlaps = True
-                    break
-            if overlaps:
-                continue
+                # Check if generated ship position overlaps with any existing ship positions
+                overlaps = False
+                for ship in ships:
+                    if any(coord in ship["coordinates"] for coord in coordinates):
+                        overlaps = True
+                        break
+                if not overlaps:
+                    break  # Ship position does not overlap, break out of loop
 
             ships.append({
                 "size": size,
@@ -103,7 +106,7 @@ def start_bash():
     img = Image.open('start.png')
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype('arial.ttf', 36)
-    draw.text((200, 452), f"https://verumignis.com/bash/{code}2/st", font=font, fill=(255, 255, 255))
+    draw.text((170, 452), f"https://verumignis.com/bash/{code}2/st.png", font=font, fill=(255, 255, 255))
 
     # Save modified image to memory
     with BytesIO() as buffer:
@@ -116,7 +119,7 @@ def start_bash():
     response.headers['Content-Type'] = 'image/png'
     return response
 
-@app.route('/bash/<game_code>/st')
+@app.route('/bash/<game_code>/st.png')
 def bash_st(game_code):
     # Load game data from bashData.json
     with open('bashData.json', 'r') as f:
@@ -159,8 +162,8 @@ def bash_st(game_code):
         img = Image.open('handshake.png')
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype('arial.ttf', 36)
-        draw.text((445, 237), f"{game_code[:-1]}2", font=font, fill=(255, 255, 255))
-        draw.text((200, 452), f"https://verumignis.com/bash/{game_code[:-1]}1/st", font=font, fill=(255, 255, 255))
+        draw.text((450, 237), f"{game_code[:-1]}2", font=font, fill=(255, 255, 255))
+        draw.text((170, 452), f"https://verumignis.com/bash/{game_code[:-1]}1/st.png", font=font, fill=(255, 255, 255))
 
         # Save modified image to memory
         with BytesIO() as buffer:
@@ -180,7 +183,7 @@ def bash_st(game_code):
         response.headers['Content-Type'] = 'image/png'
         return response
 
-@app.route('/bash/<game_code>/rl')
+@app.route('/bash/<game_code>/rl.png')
 def bash_rules(game_code):
     # Load game data from bashData.json
     with open('bashData.json', 'r') as f:
@@ -222,14 +225,37 @@ def bash_rules(game_code):
         response.headers['Content-Type'] = 'image/png'
         return response
 
-@app.route('/bash/<game_code>/<command>')
+@app.route('/bash/<game_code>/<command>.png')
 def bash_game(game_code, command):
+    is_hit = False
     # Load game data from bashData.json
     with open('bashData.json', 'r') as f:
         games = json.load(f)
 
     turn = games["games"][game_code[:-1]]["turn"]
     hits = games["games"][game_code[:-1]][f"player{game_code[-1]}"]["hits"]
+    remaining = games["games"][game_code[:-1]][f"player{game_code[-1]}"]["remaining"]
+    if game_code[-1] == "1":
+        opHits = games["games"][game_code[:-1]]["player2"]["hits"]
+        op_ships = games["games"][game_code[:-1]]["player2"]["ships"]
+        opRemaining = games["games"][game_code[:-1]]["player2"]["remaining"]
+    else:
+        opHits = games["games"][game_code[:-1]]["player1"]["hits"]
+        op_ships = games["games"][game_code[:-1]]["player1"]["ships"]
+        opRemaining = games["games"][game_code[:-1]]["player1"]["remaining"]
+
+    if opRemaining == "0":
+        with open('win.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
+    elif remaining == "0":
+        with open('win.png', 'rb') as f:
+            img_data = f.read()
+        response = make_response(img_data)
+        response.headers['Content-Type'] = 'image/png'
+        return response
 
     if turn == game_code[-1] or command == "rd":
         if isinstance(command, str) and len(command) == 2 and command[0].isalpha() and command[1].isdigit() and command not in hits or command == "rd":
@@ -237,9 +263,20 @@ def bash_game(game_code, command):
                 if turn == "1":
                     turn = "2"
                 else:
-                    turn == "1"
+                    turn = "1"
                 games["games"][game_code[:-1]][f"player{game_code[-1]}"]["hits"].append(command)
-            games["games"][game_code[:-1]]["turn"] = turn
+
+                for ship in op_ships:
+                    if command in ship["coordinates"]:
+                        is_hit = True
+                        break
+                op_ships_remaining = 0
+                for ship in op_ships:
+                    if not set(ship["coordinates"]).issubset(set(opHits)):
+                        op_ships_remaining += 1
+                opRemaining = op_ships_remaining
+                games["games"][game_code[:-1]]["turn"] = turnv
+
 
             current_time = time.time()
             codes_to_delete = []
@@ -282,21 +319,35 @@ def bash_game(game_code, command):
 
             background_img = Image.open('background.png')
             hit_img = Image.open('hit.png')
-
-            # Create a drawing context
             draw = ImageDraw.Draw(background_img)
             font = ImageFont.truetype('arial.ttf', 36)
             draw.text((10, 520), f"Type s/{command}/<new position> and press enter.", font=font, fill=(255, 255, 255))
+            if not command == "rd":
+                if is_hit:
+                    draw.text((943, 520), "HIT", font=font, fill=(255, 255, 255))
+                else:
+                    draw.text((922, 520), "MISS", font=font, fill=(255, 255, 255))
 
-            # Iterate through each ship and draw squares over the appropriate coordinates
             for ship in player_ships:
                 for coord in ship["coordinates"]:
                     x = (ord(coord[0]) - 65) * 44 + 37
                     y = (int(coord[1]) - 1) * 44 + 81
                     draw.rectangle([(x, y), (x + 42, y + 42)], fill='white', outline='black')
 
-            for hit in hits:
+            for hit in opHits:
                 x = (ord(hit[0]) - 65) * 44 + 37
+                y = (int(hit[1]) - 1) * 44 + 81
+                background_img.paste(hit_img, (x, y), hit_img)
+
+            for ship in op_ships:
+                for coord in ship["coordinates"]:
+                    x = (ord(coord[0]) - 65) * 44 + 548
+                    y = (int(coord[1]) - 1) * 44 + 81
+                    if coord in hits:
+                        draw.rectangle([(x, y), (x + 42, y + 42)], fill='white', outline='black')
+
+            for hit in hits:
+                x = (ord(hit[0]) - 65) * 44 + 548
                 y = (int(hit[1]) - 1) * 44 + 81
                 background_img.paste(hit_img, (x, y), hit_img)
 
@@ -307,10 +358,15 @@ def bash_game(game_code, command):
             response = make_response(img_data)
             response.headers['Content-Type'] = 'image/png'
             return response
+        else:
+            with open('error1.png', 'rb') as f:
+                img_data = f.read()
+            response = make_response(img_data)
+            response.headers['Content-Type'] = 'image/png'
+            return response
 
     else:
-        print("not your turn")
-        with open('error2.png', 'rb') as f:
+        with open('error3.png', 'rb') as f:
             img_data = f.read()
         response = make_response(img_data)
         response.headers['Content-Type'] = 'image/png'

@@ -7,7 +7,6 @@ from io import BytesIO
 import time
 from datetime import datetime
 
-
 app = Flask(__name__)
 
 base64_to_rgb = {'A': 0, 'B': 4, 'C': 8, 'D': 12, 'E': 16, 'F': 20, 'G': 24, 'H': 28, 'I': 32, 'J': 36, 'K': 40,
@@ -18,12 +17,74 @@ base64_to_rgb = {'A': 0, 'B': 4, 'C': 8, 'D': 12, 'E': 16, 'F': 20, 'G': 24, 'H'
                  '0': 208, '1': 212, '2': 216, '3': 220, '4': 224, '5': 228, '6': 232, '7': 236, '8': 240, '9': 244,
                  '_': 248, ';': 252, '¬': 255}
 
-
-
-
 def draw_pixel(draw, x, y, color):
     draw.rectangle((x * 10, y * 10, x * 10 + 10, y * 10 + 10), fill=color)
 
+with open('clocklogs.json', 'r') as f:
+    clockLogs = json.load(f)
+
+@app.route("/clocksys/keepalive", methods=['GET', 'POST'])
+def keepAlive():
+    print("KA recieved")
+    return "True"
+
+@app.route("/clocksys/clockin", methods=['POST'])
+def clockIn():
+    print(request.json)
+    clockMinute = request.json["minute"]
+    clockHour = request.json["hour"]
+
+    latestLog = clockLogs[-1]
+    total = latestLog["total"]
+
+    print(total)
+
+    newLog = {
+        "clockedin": 1,
+        "total": total,
+        "time": f"{clockHour}:{clockMinute}",
+        "minute": clockMinute,
+        "hour": clockHour
+    }
+    clockLogs.append(newLog)
+
+    with open('clocklogs.json', 'w') as f:
+        json.dump(clockLogs, f)
+
+    return "True"
+
+@app.route("/clocksys/clockout", methods=['POST'])
+def clockOut():
+    print(request.json)
+    clockMinute = request.json["minute"]
+    clockHour = request.json["hour"]
+
+    latestLog = clockLogs[-1]
+    total = latestLog["total"]
+    lastClockMinute = latestLog["minute"]
+    lastClockHour = latestLog["hour"]
+
+    newTotal = float(total) + float(lastClockHour) + float(lastClockMinute / 60.0)
+
+    newLog = {
+        "clockedin": 0,
+        "total": newTotal,
+        "time": f"{clockHour}:{clockMinute}",
+        "minute": clockMinute,
+        "hour": clockHour
+    }
+    clockLogs.append(newLog)
+
+    with open('clocklogs.json', 'w') as f:
+        json.dump(clockLogs, f)
+
+    print(newLog)  # add this line to output the new log
+    return "True"
+
+
+@app.route("/clocksys/getlogs", methods=['GET'])
+def getLogs():
+    return jsonify(clockLogs)
 
 @app.route('/')
 def index():

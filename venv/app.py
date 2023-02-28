@@ -28,7 +28,7 @@ with open('key.txt', 'r') as file:
     
 @app.route('/clocksys/logs')
 def index():
-    return send_file("index.html", mimetype="text/html")
+    return send_file("clocksys/getlogs.html", mimetype="text/html")
 
 @app.route("/clocksys/keepalive", methods=['GET', 'POST'])
 def keepAlive():

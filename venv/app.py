@@ -23,68 +23,97 @@ def draw_pixel(draw, x, y, color):
 with open('clocksys/clocklogs.json', 'r') as f:
     clockLogs = json.load(f)
 
+with open('key.txt', 'r') as file:
+    key = file.read()
+    
+@app.route('/clocksys/logs')
+def index():
+    return send_file("index.html", mimetype="text/html")
+
 @app.route("/clocksys/keepalive", methods=['GET', 'POST'])
 def keepAlive():
     print("KA recieved")
     return "True"
 
-@app.route("/clocksys/clockin", methods=['POST'])
+@app.route("/clocksys/clear/<usrKey>", methods=['GET'])
 def clockIn():
-    print(request.json)
-    clockMinute = request.json["minute"]
-    clockHour = request.json["hour"]
+    if usrKey == key:
+        log = {
+            "clockedin": 1,
+            "total": total,
+            "time": f"{clockHour}:{clockMinute}",
+            "minute": clockMinute,
+            "hour": clockHour
+        },
+    
+        with open('clocklogs.json', 'w') as f:
+            json.dump(log, f)
+    
+        return "True"
+    else:
+        return "nice try :)"
 
-    latestLog = clockLogs[-1]
-    total = latestLog["total"]
+@app.route("/clocksys/clockin/<usrKey>", methods=['POST'])
+def clockIn():
+    if usrKey == key:
+        clockMinute = request.json["minute"]
+        clockHour = request.json["hour"]
+    
+        latestLog = clockLogs[-1]
+        total = latestLog["total"]
+    
+        print(total)
+    
+        newLog = {
+            "clockedin": 1,
+            "total": total,
+            "time": f"{clockHour}:{clockMinute}",
+            "minute": clockMinute,
+            "hour": clockHour
+        }
+        clockLogs.append(newLog)
+    
+        with open('clocklogs.json', 'w') as f:
+            json.dump(clockLogs, f)
+    
+        return "True"
+    else:
+        return "nice try :)"
 
-    print(total)
-
-    newLog = {
-        "clockedin": 1,
-        "total": total,
-        "time": f"{clockHour}:{clockMinute}",
-        "minute": clockMinute,
-        "hour": clockHour
-    }
-    clockLogs.append(newLog)
-
-    with open('clocklogs.json', 'w') as f:
-        json.dump(clockLogs, f)
-
-    return "True"
-
-@app.route("/clocksys/clockout", methods=['POST'])
+@app.route("/clocksys/clockout/<usrKey>", methods=['POST'])
 def clockOut():
-    print(request.json)
-    clockMinute = request.json["minute"]
-    clockHour = request.json["hour"]
-
-    latestLog = clockLogs[-1]
-    total = latestLog["total"]
-    lastClockMinute = latestLog["minute"]
-    lastClockHour = latestLog["hour"]
-
-    newTotal = float(total) + float(lastClockHour) + float(lastClockMinute / 60.0)
-
-    newLog = {
-        "clockedin": 0,
-        "total": newTotal,
-        "time": f"{clockHour}:{clockMinute}",
-        "minute": clockMinute,
-        "hour": clockHour
-    }
-    clockLogs.append(newLog)
-
-    with open('clocklogs.json', 'w') as f:
-        json.dump(clockLogs, f)
-
-    print(newLog)  # add this line to output the new log
-    return "True"
+    if usrKey == key:
+        print(request.json)
+        clockMinute = request.json["minute"]
+        clockHour = request.json["hour"]
+    
+        latestLog = clockLogs[-1]
+        total = latestLog["total"]
+        lastClockMinute = latestLog["minute"]
+        lastClockHour = latestLog["hour"]
+    
+        newTotal = float(total) + float(lastClockHour) + float(lastClockMinute / 60.0)
+    
+        newLog = {
+            "clockedin": 0,
+            "total": newTotal,
+            "time": f"{clockHour}:{clockMinute}",
+            "minute": clockMinute,
+            "hour": clockHour
+        }
+        clockLogs.append(newLog)
+    
+        with open('clocklogs.json', 'w') as f:
+            json.dump(clockLogs, f)
+    
+        print(newLog)  # add this line to output the new log
+        return "True"
+    else:
+        return "nice try :)"
 
 @app.route('/')
 def index():
     return send_file("index.html", mimetype="text/html")
-
 
 @app.route('/bash/start.png')
 def start_bash():
@@ -472,7 +501,7 @@ def bitmapgen(input_string):
 
 @app.route('/<path:filename>')
 def serve(filename):
-    if ".." in filename or "bashData" in filename:
+    if ".." in filename or "bashData" in filename or "key" in filename:
         return "nice try :)"
     elif "duck.webm" in filename or "cool-video" in filename:
         f = open("rickrolls.txt", "r")
@@ -482,7 +511,7 @@ def serve(filename):
         f = open("rickrolls.txt", "w")
         f.write(str(newCount))
         f.close()
-    if "cool-video" in filename:
+    if "cool-video" in filename or "redirect-045" in filename:
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
     try:
         mimetype = mimetypes.guess_type(filename)[0]

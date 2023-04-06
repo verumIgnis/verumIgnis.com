@@ -515,8 +515,6 @@ def serve(filename):
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
     if "i-will-steal-your-money-and-buy-you-cgpt-plus" in filename or "gimmemoney" in filename:
         return redirect('https://chat.openai.com/payments/success')
-    if "ctf" in filename:
-        return 'DM me with the flag for a suprise :)<br>Salt: crackTheHash<br>Hash: 2291bd35031f057ba025790408bdc2cf27577306432be534b8f86fcad4f8f169<br>Hint: hashlib.sha256(f"{salt}-flag={flag}").hexdigest()'
     try:
         mimetype = mimetypes.guess_type(filename)[0]
         return send_file(filename, mimetype=mimetype)

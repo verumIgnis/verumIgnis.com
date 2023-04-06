@@ -25,9 +25,9 @@ with open('clocksys/clocklogs.json', 'r') as f:
 
 with open('key.txt', 'r') as file:
     key = file.read()
-    
+
 @app.route('/clocksys/logs')
-def index():
+def clocksysInterface():
     return send_file("clocksys/getlogs.html", mimetype="text/html")
 
 @app.route("/clocksys/keepalive", methods=['GET', 'POST'])
@@ -36,7 +36,7 @@ def keepAlive():
     return "True"
 
 @app.route("/clocksys/clear/<usrKey>", methods=['GET'])
-def clockIn():
+def clear():
     if usrKey == key:
         log = {
             "clockedin": 1,
@@ -45,25 +45,25 @@ def clockIn():
             "minute": clockMinute,
             "hour": clockHour
         },
-    
+
         with open('clocklogs.json', 'w') as f:
             json.dump(log, f)
-    
+
         return "True"
     else:
         return "nice try :)"
 
-@app.route("/clocksys/clockin/<usrKey>", methods=['POST'])
+@app.route("/clocksys/clockin<usrKey>", methods=['POST'])
 def clockIn():
     if usrKey == key:
         clockMinute = request.json["minute"]
         clockHour = request.json["hour"]
-    
+
         latestLog = clockLogs[-1]
         total = latestLog["total"]
-    
+
         print(total)
-    
+
         newLog = {
             "clockedin": 1,
             "total": total,
@@ -72,28 +72,28 @@ def clockIn():
             "hour": clockHour
         }
         clockLogs.append(newLog)
-    
+
         with open('clocklogs.json', 'w') as f:
             json.dump(clockLogs, f)
-    
+
         return "True"
     else:
         return "nice try :)"
 
-@app.route("/clocksys/clockout/<usrKey>", methods=['POST'])
+@app.route("/clocksys/clockout<usrKey>", methods=['POST'])
 def clockOut():
     if usrKey == key:
         print(request.json)
         clockMinute = request.json["minute"]
         clockHour = request.json["hour"]
-    
+
         latestLog = clockLogs[-1]
         total = latestLog["total"]
         lastClockMinute = latestLog["minute"]
         lastClockHour = latestLog["hour"]
-    
+
         newTotal = float(total) + float(lastClockHour) + float(lastClockMinute / 60.0)
-    
+
         newLog = {
             "clockedin": 0,
             "total": newTotal,
@@ -102,10 +102,10 @@ def clockOut():
             "hour": clockHour
         }
         clockLogs.append(newLog)
-    
+
         with open('clocklogs.json', 'w') as f:
             json.dump(clockLogs, f)
-    
+
         print(newLog)  # add this line to output the new log
         return "True"
     else:
@@ -503,7 +503,7 @@ def bitmapgen(input_string):
 def serve(filename):
     if ".." in filename or "bashData" in filename or "key" in filename:
         return "nice try :)"
-    elif "duck.webm" in filename or "cool-video" in filename:
+    elif "duck.webm" in filename or "cool-video" in filename or "gottem.mp4" in filename or "download-compressed-air" in filename:
         f = open("rickrolls.txt", "r")
         rickrollCount = int(f.read())
         f.close()
@@ -511,10 +511,12 @@ def serve(filename):
         f = open("rickrolls.txt", "w")
         f.write(str(newCount))
         f.close()
-    if "cool-video" in filename or "redirect-045" in filename:
+    if "cool-video" in filename or "gottem.mp4" in filename or "redirect-045" in filename or "download-compressed-air" in filename:
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    if "i-will-steal-your-money-and-buy-you-cgpt-plus" in filename or "gimmemoney" in filename:
+        return redirect('https://chat.openai.com/payments/success')
     if "ctf" in filename:
-        return 'DM me with the flag for a suprise :)\nSalt: crackTheHash\nHash: 2291bd35031f057ba025790408bdc2cf27577306432be534b8f86fcad4f8f169\nHint: f"{salt}-flag={flag}"'
+        return 'DM me with the flag for a suprise :)<br>Salt: crackTheHash<br>Hash: 2291bd35031f057ba025790408bdc2cf27577306432be534b8f86fcad4f8f169<br>Hint: hashlib.sha256(f"{salt}-flag={flag}").hexdigest()'
     try:
         mimetype = mimetypes.guess_type(filename)[0]
         return send_file(filename, mimetype=mimetype)

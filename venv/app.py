@@ -513,6 +513,8 @@ def serve(filename):
         f.close()
     if "cool-video" in filename or "redirect-045" in filename:
         return redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    if "ctf" in filename:
+        return 'DM me with the flag for a suprise :)\nSalt: crackTheHash\nHash: 2291bd35031f057ba025790408bdc2cf27577306432be534b8f86fcad4f8f169\nHint: f"{salt}-flag={flag}"'
     try:
         mimetype = mimetypes.guess_type(filename)[0]
         return send_file(filename, mimetype=mimetype)

@@ -19,7 +19,11 @@ base64_to_rgb = {'A': 0, 'B': 4, 'C': 8, 'D': 12, 'E': 16, 'F': 20, 'G': 24, 'H'
 
 def draw_pixel(draw, x, y, color):
     draw.rectangle((x * 10, y * 10, x * 10 + 10, y * 10 + 10), fill=color)
+    
+    
 
+#***CLOCKSYS API STARTS HERE***
+    
 with open('clocksys/clocklogs.json', 'r') as f:
     clockLogs = json.load(f)
 
@@ -111,6 +115,8 @@ def clockOut():
     else:
         return "nice try :)"
 
+#***CLOCKSYS API ENDS HERE***
+      
 @app.route('/')
 def index():
     return send_file("index.html", mimetype="text/html")
